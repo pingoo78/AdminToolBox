@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "AdminToolBox (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "AdminToolBox (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
