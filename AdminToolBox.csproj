@@ -23,6 +23,16 @@
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
+  <!-- L'icône de l'app (AppWindow.SetIcon) est lue à l'exécution depuis Assets\AppIcon.ico à côté
+       de l'exe : le SDK la copie implicitement pour "build" mais pas pour "publish" sans cette
+       déclaration explicite. -->
+  <ItemGroup>
+    <Content Include="Assets\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2526" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.4.0" />
@@ -33,9 +43,23 @@
   <!-- Publish Properties -->
   <PropertyGroup>
     <SelfContained>true</SelfContained>
-    <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
-    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
+    <PublishReadyToRun>False</PublishReadyToRun>
     <PublishTrimmed>False</PublishTrimmed>
     <PublishSingleFile>False</PublishSingleFile>
   </PropertyGroup>
+
+  <!-- dotnet publish omet AdminToolBox.pri, App.xbf et MainWindow.xbf (sorties du compilateur XAML)
+       alors que dotnet build les copie normalement — écart connu pour les apps WinUI3 non
+       empaquetées. Sans eux, InitializeComponent() ne trouve plus l'interface compilée et
+       l'application plante au lancement (0xc000027b dans Microsoft.UI.Xaml.dll). On les force
+       explicitement dans la liste des fichiers publiés. -->
+  <Target Name="IncludeXamlCompilerOutputInPublish" BeforeTargets="ComputeFilesToPublish">
+    <ItemGroup>
+      <_XamlCompilerPublishFiles Include="$(OutDir)$(AssemblyName).pri" />
+      <_XamlCompilerPublishFiles Include="$(OutDir)*.xbf" />
+      <ResolvedFileToPublish Include="@(_XamlCompilerPublishFiles)" Condition="Exists('%(Identity)')">
+        <RelativePath>%(Filename)%(Extension)</RelativePath>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
 </Project>
