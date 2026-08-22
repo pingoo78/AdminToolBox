@@ -363,3 +363,8 @@ MigrationBackup/
 FodyWeavers.xsd
 # Archives de distribution generees localement (dotnet publish + zip)
 *.zip
+
+# Installateur MSI genere localement (wix build)
+Installer/*.msi
+Installer/*.wixpdb
+.wix/

@@ -126,6 +126,26 @@ L'exécutable généré (`bin\x64\Debug\...\AdminToolBox.exe`) demande une élé
 
 > `-p:Platform=x64` est nécessaire : sans cette précision, le SDK peut mal résoudre la plateforme cible par défaut.
 
+### Build de distribution (autonome)
+
+```powershell
+dotnet publish -c Release -r win-x64 -p:Platform=x64 --self-contained true
+```
+
+Génère un exécutable autonome (aucune dépendance à installer sur le poste cible) dans `bin\x64\Release\net8.0-windows10.0.19041.0\win-x64\publish\`.
+
+### Installateur (.msi)
+
+```powershell
+dotnet tool install --global wix --version 5.0.2
+wix extension add WixToolset.UI.wixext/5.0.2
+wix build Installer/AdminToolBox.wxs -arch x64 -ext WixToolset.UI.wixext `
+  -d PublishDir="bin\x64\Release\net8.0-windows10.0.19041.0\win-x64\publish" `
+  -out Installer/AdminToolBox.msi
+```
+
+> La version 5.x de WiX est utilisée volontairement : la v7 impose l'acceptation d'un « Open Source Maintenance Fee » (EULA) avant utilisation.
+
 ## Stack technique
 
 - **WinUI 3** (Windows App SDK) sur **.NET 8**, en C#
