@@ -39,13 +39,7 @@
       <Files Include="$(var.PublishDir)\**" Directory="INSTALLFOLDER" />
     </Feature>
 
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
     <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
-
-    <!-- Pas de licence définie pour le projet : on saute la page de licence (qui afficherait
-         sinon un texte "Lorem ipsum" par défaut) en reliant directement Bienvenue et Dossier. -->
-    <UI>
-      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="99" Condition="NOT Installed" />
-      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="99" />
-    </UI>
   </Package>
 </Wix>
