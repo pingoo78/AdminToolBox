@@ -164,6 +164,10 @@ AdminToolBox/
 └── MainWindow.*  Fenêtre principale
 ```
 
+## Licence
+
+AdminToolBox est distribué sous licence [GNU GPL v3](LICENSE) : libre d'utilisation, de modification et de redistribution, à condition que tout dérivé distribué reste lui aussi sous GPL v3.
+
 ## Auteur
 
 **Alexandre ARMENIAN**
