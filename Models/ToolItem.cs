@@ -35,8 +35,8 @@ public sealed class ToolItem
     /// </summary>
     public string? IconImagePath { get; init; }
 
-    /// <summary>Si vrai, l'outil n'est pas listé du tout quand il est absent du poste (au lieu d'apparaître grisé).</summary>
-    public bool HideWhenUnavailable { get; init; }
+    /// <summary>Prérequis affiché quand on clique sur l'outil absent du poste (par défaut : message RSAT).</summary>
+    public string? UnavailableHint { get; init; }
 
     public string IconLookupFile => IconFileName ?? FileName;
 

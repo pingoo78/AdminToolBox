@@ -249,7 +249,6 @@ public sealed partial class MainWindow : Window
     private async Task LoadToolsAsync()
     {
         _allTools = await Task.Run(() => ToolCatalog.All
-            .Where(tool => !tool.HideWhenUnavailable || ToolAvailabilityService.IsAvailable(tool))
             .Select(tool => new ToolViewModel(tool, ToolAvailabilityService.IsAvailable(tool))
             {
                 IsFavorite = _settings.Favorites.Contains(tool.Name),
@@ -415,7 +414,8 @@ public sealed partial class MainWindow : Window
         {
             await ShowDialogAsync(
                 "Outil indisponible",
-                $"« {toolViewModel.Name} » n'est pas installé sur ce poste (les outils Active Directory nécessitent souvent RSAT).");
+                $"« {toolViewModel.Name} » n'est pas installé sur ce poste. " +
+                (toolViewModel.Tool.UnavailableHint ?? "Les outils Active Directory nécessitent souvent RSAT."));
             return;
         }
 

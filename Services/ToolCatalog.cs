@@ -63,8 +63,8 @@ public static class ToolCatalog
         new() { Name = "Sites et services AD", Description = "Topologie de réplication — nécessite RSAT", Category = ToolCategory.ActiveDirectory, FileName = "dssite.msc" },
         new() { Name = "Domaines et approbations AD", Description = "Relations d'approbation entre domaines — nécessite RSAT", Category = ToolCategory.ActiveDirectory, FileName = "domain.msc" },
 
-        // Affiché uniquement si LAPS UI (legacy) est installé sur le poste.
-        new() { Name = "LAPS UI", Description = "Mots de passe administrateur local (LAPS legacy)", Category = ToolCategory.ActiveDirectory, FileName = LapsUiPath, HideWhenUnavailable = true },
+        // Grisé si LAPS UI (legacy) n'est pas installé, comme les outils RSAT.
+        new() { Name = "LAPS UI", Description = "Mots de passe administrateur local (LAPS legacy)", Category = ToolCategory.ActiveDirectory, FileName = LapsUiPath, UnavailableHint = "Il nécessite LAPS UI (legacy, AdmPwd.UI.exe), à installer depuis le paquet LAPS de Microsoft." },
 
         // --- Consoles ---
         new() { Name = "PowerShell", Description = "Console PowerShell", Category = ToolCategory.Consoles, FileName = "powershell.exe" },
