@@ -182,7 +182,21 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <Grid x:Name="InfoPanelsGrid" Grid.Row="0" Margin="0,0,0,16">
+                <StackPanel x:Name="InfoSection" Grid.Row="0" Margin="0,0,0,16">
+                <Button
+                    x:Name="InfoToggleButton"
+                    Width="32"
+                    Height="24"
+                    Margin="0,0,0,4"
+                    Padding="0"
+                    HorizontalAlignment="Right"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Click="InfoToggleButton_Click"
+                    ToolTipService.ToolTip="Réduire / développer les informations du poste">
+                    <FontIcon x:Name="InfoToggleIcon" FontFamily="Segoe Fluent Icons" FontSize="12" />
+                </Button>
+                <Grid x:Name="InfoPanelsGrid">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="6*" />
                         <ColumnDefinition Width="4*" />
@@ -264,6 +278,7 @@
                         </ItemsControl>
                     </Border>
                 </Grid>
+                </StackPanel>
 
                 <ScrollViewer x:Name="ToolsScrollViewer" Grid.Row="1">
                     <StackPanel Spacing="20">

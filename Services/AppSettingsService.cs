@@ -6,6 +6,7 @@ public sealed class AppSettings
 {
     public string Theme { get; set; } = "Default";
     public List<string> Favorites { get; set; } = [];
+    public bool InfoPanelsCollapsed { get; set; }
 }
 
 /// <summary>

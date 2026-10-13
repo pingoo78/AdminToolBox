@@ -29,16 +29,30 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
-        SetInitialWindowSize();
         SetMinimumWindowSize();
         SetWindowIcon();
         LoadSystemInfo();
         _settings = AppSettingsService.Load();
         LoadTheme();
+        ApplyInfoPanelsCollapsed();
         _updateCheckTask = UpdateCheckService.CheckForUpdateAsync(AppInfoService.GetVersion());
         LoadAboutInfo();
         _ = LoadToolsAsync();
         UpdatePaneToggleButton(NavView.DisplayMode);
+    }
+
+    private void InfoToggleButton_Click(object sender, RoutedEventArgs e)
+    {
+        _settings.InfoPanelsCollapsed = !_settings.InfoPanelsCollapsed;
+        AppSettingsService.Save(_settings);
+        ApplyInfoPanelsCollapsed();
+    }
+
+    /// <summary>Chevron vers le haut quand les panneaux sont affichés (réduire), vers le bas quand ils sont réduits.</summary>
+    private void ApplyInfoPanelsCollapsed()
+    {
+        InfoPanelsGrid.Visibility = _settings.InfoPanelsCollapsed ? Visibility.Collapsed : Visibility.Visible;
+        InfoToggleIcon.Glyph = char.ConvertFromUtf32(_settings.InfoPanelsCollapsed ? 0xE70D : 0xE70E);
     }
 
     private void PaneToggleButton_Click(object sender, RoutedEventArgs e) => NavView.IsPaneOpen = !NavView.IsPaneOpen;
@@ -102,20 +116,6 @@ public sealed partial class MainWindow : Window
             (int)(bounds.Height * scale));
 
         nonClientSource.SetRegionRects(NonClientRegionKind.Passthrough, [rect]);
-    }
-
-    /// <summary>Ouvre la fenêtre à 50% de la largeur et 60% de la hauteur de l'écran, centrée.</summary>
-    private void SetInitialWindowSize()
-    {
-        var windowId = Win32Interop.GetWindowIdFromWindow(WindowNative.GetWindowHandle(this));
-        var workArea = DisplayArea.GetFromWindowId(windowId, DisplayAreaFallback.Primary).WorkArea;
-
-        var width = (int)(workArea.Width * 0.5);
-        var height = (int)(workArea.Height * 0.6);
-        var x = workArea.X + (workArea.Width - width) / 2;
-        var y = workArea.Y + (workArea.Height - height) / 2;
-
-        AppWindow.MoveAndResize(new RectInt32(x, y, width, height));
     }
 
     /// <summary>
@@ -249,6 +249,7 @@ public sealed partial class MainWindow : Window
     private async Task LoadToolsAsync()
     {
         _allTools = await Task.Run(() => ToolCatalog.All
+            .Where(tool => !tool.HideWhenUnavailable || ToolAvailabilityService.IsAvailable(tool))
             .Select(tool => new ToolViewModel(tool, ToolAvailabilityService.IsAvailable(tool))
             {
                 IsFavorite = _settings.Favorites.Contains(tool.Name),
@@ -380,7 +381,7 @@ public sealed partial class MainWindow : Window
 
     private void ShowSettingsPanel()
     {
-        InfoPanelsGrid.Visibility = Visibility.Collapsed;
+        InfoSection.Visibility = Visibility.Collapsed;
         ToolsScrollViewer.Visibility = Visibility.Collapsed;
         SettingsPanel.Visibility = Visibility.Visible;
     }
@@ -388,7 +389,7 @@ public sealed partial class MainWindow : Window
     private void HideSettingsPanel()
     {
         SettingsPanel.Visibility = Visibility.Collapsed;
-        InfoPanelsGrid.Visibility = Visibility.Visible;
+        InfoSection.Visibility = Visibility.Visible;
         ToolsScrollViewer.Visibility = Visibility.Visible;
     }
 

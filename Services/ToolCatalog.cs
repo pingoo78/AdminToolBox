@@ -5,6 +5,15 @@ namespace AdminToolBox.Services;
 /// <summary>Catalogue statique des outils proposés par la toolbox.</summary>
 public static class ToolCatalog
 {
+    /// <summary>Chemin de LAPS UI (legacy, AdmPwd.UI.exe) : Program Files (x64) ou, à défaut, Program Files (x86).</summary>
+    private static string LapsUiPath { get; } = new[]
+    {
+        Environment.SpecialFolder.ProgramFiles,
+        Environment.SpecialFolder.ProgramFilesX86,
+    }
+    .Select(folder => Path.Combine(Environment.GetFolderPath(folder), "LAPS", "AdmPwd.UI.exe"))
+    .FirstOrDefault(File.Exists) ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "LAPS", "AdmPwd.UI.exe");
+
     public static IReadOnlyList<ToolItem> All { get; } = new List<ToolItem>
     {
         // --- Système ---
@@ -53,6 +62,9 @@ public static class ToolCatalog
         new() { Name = "Gestion des stratégies de groupe", Description = "GPO du domaine — nécessite RSAT", Category = ToolCategory.ActiveDirectory, FileName = "gpmc.msc" },
         new() { Name = "Sites et services AD", Description = "Topologie de réplication — nécessite RSAT", Category = ToolCategory.ActiveDirectory, FileName = "dssite.msc" },
         new() { Name = "Domaines et approbations AD", Description = "Relations d'approbation entre domaines — nécessite RSAT", Category = ToolCategory.ActiveDirectory, FileName = "domain.msc" },
+
+        // Affiché uniquement si LAPS UI (legacy) est installé sur le poste.
+        new() { Name = "LAPS UI", Description = "Mots de passe administrateur local (LAPS legacy)", Category = ToolCategory.ActiveDirectory, FileName = LapsUiPath, HideWhenUnavailable = true },
 
         // --- Consoles ---
         new() { Name = "PowerShell", Description = "Console PowerShell", Category = ToolCategory.Consoles, FileName = "powershell.exe" },

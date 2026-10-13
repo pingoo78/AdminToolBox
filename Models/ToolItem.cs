@@ -35,6 +35,9 @@ public sealed class ToolItem
     /// </summary>
     public string? IconImagePath { get; init; }
 
+    /// <summary>Si vrai, l'outil n'est pas listé du tout quand il est absent du poste (au lieu d'apparaître grisé).</summary>
+    public bool HideWhenUnavailable { get; init; }
+
     public string IconLookupFile => IconFileName ?? FileName;
 
     /// <summary>Ligne de commande réellement passée à ShellExecute, affichée dans l'infobulle.</summary>

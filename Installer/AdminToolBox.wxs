@@ -2,7 +2,7 @@
   <Package
     Name="AdminToolBox"
     Manufacturer="Alexandre ARMENIAN"
-    Version="1.0.0"
+    Version="1.1.0"
     UpgradeCode="3a6716b9-e643-4503-9e7c-eecc150f2157"
     Scope="perMachine">
 
