@@ -141,8 +141,7 @@ dotnet tool install --global wix --version 5.0.2
 wix extension add WixToolset.UI.wixext/5.0.2
 wix build Installer/AdminToolBox.wxs -arch x64 -ext WixToolset.UI.wixext `
   -d LicenseRtf="Installer\License.rtf" `
-  -d PublishDir="bind\Release
-et8.0-windows10.0.19041.0\win-x64\publish" `
+  -d PublishDir="bin\x64\Release\net8.0-windows10.0.19041.0\win-x64\publish" `
   -out Installer/AdminToolBox.msi
 ```
 
