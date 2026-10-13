@@ -1,4 +1,4 @@
-// This file is part of AdminToolBox.
+﻿// This file is part of AdminToolBox.
 // Copyright (C) 2026 Alexandre ARMENIAN
 //
 // AdminToolBox is free software: you can redistribute it and/or modify it under the terms of
@@ -33,7 +33,7 @@ public static class UpdateCheckService
     {
         try
         {
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5), MaxResponseContentBufferSize = 1_000_000 };
             client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("AdminToolBox", currentVersion));
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
 
@@ -55,7 +55,7 @@ public static class UpdateCheckService
 
             return new UpdateCheckResult(true, latestVersion > current, latest);
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
+        catch (Exception)
         {
             return new UpdateCheckResult(false, false, null);
         }

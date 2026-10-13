@@ -1,4 +1,4 @@
-// This file is part of AdminToolBox.
+﻿// This file is part of AdminToolBox.
 // Copyright (C) 2026 Alexandre ARMENIAN
 //
 // AdminToolBox is free software: you can redistribute it and/or modify it under the terms of
@@ -38,9 +38,15 @@ public static class AppSettingsService
     {
         try
         {
-            return File.Exists(FilePath)
+            var settings = File.Exists(FilePath)
                 ? JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath)) ?? new AppSettings()
                 : new AppSettings();
+
+            // Le fichier est modifiable par l'utilisateur : on neutralise les valeurs null/hors
+            // contrat plutôt que de planter au démarrage.
+            settings.Favorites ??= [];
+            settings.Theme = settings.Theme is "Light" or "Dark" ? settings.Theme : "Default";
+            return settings;
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
         {

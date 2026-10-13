@@ -1,4 +1,4 @@
-// This file is part of AdminToolBox.
+﻿// This file is part of AdminToolBox.
 // Copyright (C) 2026 Alexandre ARMENIAN
 //
 // AdminToolBox is free software: you can redistribute it and/or modify it under the terms of
@@ -25,10 +25,31 @@ namespace AdminToolBox.Services;
 /// </summary>
 public static class ToolAvailabilityService
 {
-    public static bool IsAvailable(ToolItem tool) => ResolveFullPath(tool.IconLookupFile) is not null || IsProtocol(tool.FileName);
+    public static bool IsAvailable(ToolItem tool) =>
+        ResolveFullPath(tool.IconLookupFile, AllowsAppExecutionAlias(tool)) is not null || IsProtocol(tool.FileName);
 
-    /// <summary>Résout le chemin complet d'un exécutable/console système, ou null s'il est introuvable.</summary>
-    public static string? ResolveFullPath(string fileName)
+    /// <summary>Chemin vers lequel pointe l'icône de l'outil, ou null (outil absent / icône introuvable).</summary>
+    public static string? ResolveIconSource(ToolItem tool) =>
+        tool.IconPackageFamilyName is { } packageFamilyName
+            ? ResolvePackagedFullPath(packageFamilyName, tool.IconLookupFile)
+            : ResolveFullPath(tool.IconLookupFile, AllowsAppExecutionAlias(tool));
+
+    /// <summary>
+    /// Cible réellement lancée : chemin absolu résolu dans des dossiers de confiance (jamais le
+    /// PATH ni le répertoire courant, l'appli étant élevée), ou le protocole tel quel.
+    /// </summary>
+    public static string? ResolveLaunchTarget(ToolItem tool) =>
+        IsProtocol(tool.FileName) ? tool.FileName : ResolveFullPath(tool.FileName, AllowsAppExecutionAlias(tool));
+
+    // Seul Windows Terminal est un App Execution Alias (dossier WindowsApps de l'utilisateur).
+    private static bool AllowsAppExecutionAlias(ToolItem tool) => tool.IconPackageFamilyName is not null;
+
+    /// <summary>
+    /// Résout le chemin complet d'un exécutable/console système, ou null s'il est introuvable.
+    /// L'appli étant élevée, seuls des dossiers protégés en écriture sont consultés : le PATH
+    /// (qui peut contenir des dossiers modifiables par un utilisateur standard) est volontairement ignoré.
+    /// </summary>
+    public static string? ResolveFullPath(string fileName, bool allowAppExecutionAlias = false)
     {
         if (IsProtocol(fileName))
         {
@@ -36,34 +57,33 @@ public static class ToolAvailabilityService
             return Registry.ClassesRoot.OpenSubKey(scheme) is not null ? fileName : null;
         }
 
+        // Chemin absolu fourni par le catalogue (donnée de confiance).
+        if (Path.IsPathRooted(fileName))
+        {
+            return File.Exists(fileName) ? fileName : null;
+        }
+
+        var windowsDir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
         var candidateDirs = new List<string>
         {
             Environment.SystemDirectory,
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "SysWOW64"),
+            windowsDir,
+            Path.Combine(windowsDir, "SysWOW64"),
+            Path.Combine(Environment.SystemDirectory, "WindowsPowerShell", "v1.0"),
         };
 
-        var pathVar = Environment.GetEnvironmentVariable("PATH");
-        if (!string.IsNullOrEmpty(pathVar))
+        if (allowAppExecutionAlias)
         {
-            candidateDirs.AddRange(pathVar.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries));
+            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            candidateDirs.Add(Path.Combine(localAppData, "Microsoft", "WindowsApps"));
         }
-
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        candidateDirs.Add(Path.Combine(localAppData, "Microsoft", "WindowsApps"));
 
         foreach (var dir in candidateDirs)
         {
-            try
+            var candidate = Path.Combine(dir, fileName);
+            if (File.Exists(candidate))
             {
-                var candidate = Path.Combine(dir, fileName);
-                if (File.Exists(candidate))
-                {
-                    return candidate;
-                }
-            }
-            catch (ArgumentException)
-            {
-                // Répertoire de PATH mal formé : on ignore et on continue.
+                return candidate;
             }
         }
 

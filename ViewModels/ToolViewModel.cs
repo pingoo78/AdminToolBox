@@ -1,4 +1,4 @@
-// This file is part of AdminToolBox.
+﻿// This file is part of AdminToolBox.
 // Copyright (C) 2026 Alexandre ARMENIAN
 //
 // AdminToolBox is free software: you can redistribute it and/or modify it under the terms of
@@ -28,6 +28,9 @@ public sealed class ToolViewModel(ToolItem tool, bool isAvailable) : INotifyProp
     public ToolItem Tool { get; } = tool;
     public string Name => Tool.Name;
     public bool IsAvailable { get; } = isAvailable;
+
+    /// <summary>Fichier dont l'icône est extraite, résolu une seule fois en tâche de fond.</summary>
+    public string? IconSourcePath { get; init; }
     public double Opacity => IsAvailable ? 1.0 : 0.4;
 
     public string Description

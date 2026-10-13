@@ -1,4 +1,4 @@
-// This file is part of AdminToolBox.
+﻿// This file is part of AdminToolBox.
 // Copyright (C) 2026 Alexandre ARMENIAN
 //
 // AdminToolBox is free software: you can redistribute it and/or modify it under the terms of
@@ -27,18 +27,28 @@ public sealed class ToolLaunchException(ToolItem tool, Exception inner)
 /// <summary>Lance les outils du catalogue en héritant du jeton (élevé) du process courant.</summary>
 public static class ToolLauncherService
 {
+    private const int ErrorCancelled = 1223;
+
     public static void Launch(ToolItem tool)
     {
+        var target = ToolAvailabilityService.ResolveLaunchTarget(tool)
+            ?? throw new ToolLaunchException(tool, new FileNotFoundException(tool.FileName));
+
         var startInfo = new ProcessStartInfo
         {
-            FileName = tool.FileName,
+            FileName = target,
             Arguments = tool.Arguments,
             UseShellExecute = true,
+            WorkingDirectory = Environment.SystemDirectory,
         };
 
         try
         {
             Process.Start(startInfo);
+        }
+        catch (Win32Exception ex) when (ex.NativeErrorCode == ErrorCancelled)
+        {
+            // L'utilisateur a refusé l'invite UAC : ce n'est pas une erreur.
         }
         catch (Exception ex) when (ex is Win32Exception or FileNotFoundException)
         {

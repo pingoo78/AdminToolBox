@@ -1,4 +1,4 @@
-// This file is part of AdminToolBox.
+﻿// This file is part of AdminToolBox.
 // Copyright (C) 2026 Alexandre ARMENIAN
 //
 // AdminToolBox is free software: you can redistribute it and/or modify it under the terms of
@@ -28,6 +28,11 @@ public static class ToolCatalog
     .Select(folder => Path.Combine(Environment.GetFolderPath(folder), "LAPS", "AdmPwd.UI.exe"))
     .FirstOrDefault(File.Exists) ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "LAPS", "AdmPwd.UI.exe");
 
+    private static readonly string SettingsLogoPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.Windows), "ImmersiveControlPanel", "images", "logo.targetsize-48_altform-unplated.png");
+
+    private static readonly string SecurityHealthPath = Path.Combine(Environment.SystemDirectory, "SecurityHealthSystray.exe");
+
     public static IReadOnlyList<ToolItem> All { get; } = new List<ToolItem>
     {
         // --- Système ---
@@ -49,7 +54,7 @@ public static class ToolCatalog
         new() { Name = "Panneau de configuration", Description = "Panneau de configuration classique", Category = ToolCategory.Systeme, FileName = "control.exe" },
         // IconImagePath : l'icône embarquée dans SystemSettings.exe est un vieux pictogramme plat ;
         // on prend le vrai logo Fluent du paquet à la place.
-        new() { Name = "Paramètres Windows", Description = "Nouvelle application Paramètres", Category = ToolCategory.Systeme, FileName = "ms-settings:", IconImagePath = @"C:\Windows\ImmersiveControlPanel\images\logo.targetsize-48_altform-unplated.png" },
+        new() { Name = "Paramètres Windows", Description = "Nouvelle application Paramètres", Category = ToolCategory.Systeme, FileName = "ms-settings:", IconImagePath = SettingsLogoPath },
         new() { Name = "Propriétés système", Description = "Nom d'ordinateur, matériel, protection système", Category = ToolCategory.Systeme, FileName = "sysdm.cpl" },
         new() { Name = "Variables d'environnement", Description = "Édition des variables système/utilisateur", Category = ToolCategory.Systeme, FileName = "rundll32.exe", Arguments = "sysdm.cpl,EditEnvironmentVariables", IconFileName = "sysdm.cpl" },
         new() { Name = "Nettoyage de disque", Description = "Libère de l'espace disque", Category = ToolCategory.Systeme, FileName = "cleanmgr.exe" },
@@ -69,7 +74,7 @@ public static class ToolCatalog
         new() { Name = "BitLocker", Description = "Chiffrement de lecteur", Category = ToolCategory.Securite, FileName = "control.exe", Arguments = "/name Microsoft.BitLockerDriveEncryption", IconFileName = "fvecpl.dll" },
         // IconFileName : icône réelle du bouclier Sécurité Windows (auparavant réglée par erreur
         // sur control.exe, la même icône générique que "Panneau de configuration").
-        new() { Name = "Sécurité Windows", Description = "Windows Defender", Category = ToolCategory.Securite, FileName = "windowsdefender:", IconFileName = @"C:\Windows\System32\SecurityHealthSystray.exe" },
+        new() { Name = "Sécurité Windows", Description = "Windows Defender", Category = ToolCategory.Securite, FileName = "windowsdefender:", IconFileName = SecurityHealthPath },
 
         // --- Active Directory (RSAT) ---
         new() { Name = "Utilisateurs et ordinateurs AD", Description = "Comptes, groupes, unités d'organisation — nécessite RSAT", Category = ToolCategory.ActiveDirectory, FileName = "dsa.msc" },

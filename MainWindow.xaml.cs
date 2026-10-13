@@ -1,4 +1,4 @@
-// This file is part of AdminToolBox.
+﻿// This file is part of AdminToolBox.
 // Copyright (C) 2026 Alexandre ARMENIAN
 //
 // AdminToolBox is free software: you can redistribute it and/or modify it under the terms of
@@ -45,7 +45,7 @@ public sealed partial class MainWindow : Window
         SetTitleBar(AppTitleBar);
         SetMinimumWindowSize();
         SetWindowIcon();
-        LoadSystemInfo();
+        _ = LoadSystemInfoAsync();
         _settings = AppSettingsService.Load();
         LoadTheme();
         ApplyInfoPanelsCollapsed();
@@ -240,9 +240,10 @@ public sealed partial class MainWindow : Window
     private static readonly string GlyphGateway = char.ConvertFromUtf32(0xEBD2);
     private static readonly string GlyphGlobe = char.ConvertFromUtf32(0xE774);
 
-    private void LoadSystemInfo()
+    private async Task LoadSystemInfoAsync()
     {
-        var info = SystemInfoService.GetSnapshot();
+        // Requêtes WMI et réseau : hors du thread UI pour ne pas retarder l'affichage de la fenêtre.
+        var info = await Task.Run(SystemInfoService.GetSnapshot);
 
         InfoItemsControl.ItemsSource = new List<InfoItem>
         {
@@ -265,6 +266,7 @@ public sealed partial class MainWindow : Window
         _allTools = await Task.Run(() => ToolCatalog.All
             .Select(tool => new ToolViewModel(tool, ToolAvailabilityService.IsAvailable(tool))
             {
+                IconSourcePath = ToolAvailabilityService.ResolveIconSource(tool),
                 IsFavorite = _settings.Favorites.Contains(tool.Name),
             })
             .ToList());
@@ -277,7 +279,7 @@ public sealed partial class MainWindow : Window
     {
         foreach (var toolViewModel in _allTools)
         {
-            var pngBytes = await ResolveIconBytesAsync(toolViewModel.Tool);
+            var pngBytes = await ResolveIconBytesAsync(toolViewModel);
             pngBytes ??= IconExtractionService.GetGenericUnavailableIconPngBytes();
             if (pngBytes is null)
             {
@@ -288,22 +290,19 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private static async Task<byte[]?> ResolveIconBytesAsync(ToolItem tool)
+    private static async Task<byte[]?> ResolveIconBytesAsync(ToolViewModel toolViewModel)
     {
+        var tool = toolViewModel.Tool;
         if (tool.IconImagePath is { } imagePath)
         {
             return File.Exists(imagePath) ? await File.ReadAllBytesAsync(imagePath) : null;
         }
 
-        var resolvedPath = tool.IconPackageFamilyName is { } packageFamilyName
-            ? ToolAvailabilityService.ResolvePackagedFullPath(packageFamilyName, tool.IconLookupFile)
-            : ToolAvailabilityService.ResolveFullPath(tool.IconLookupFile);
-
         // SHGetFileInfo s'appuie sur des gestionnaires d'icônes COM (IExtractIcon) qui exigent
         // un appartement STA correctement initialisé : on reste donc sur le thread UI (STA)
         // plutôt que de déléguer à un thread du pool (MTA), sous peine d'échecs silencieux et
         // incohérents selon le thread réutilisé.
-        return resolvedPath is not null ? IconExtractionService.GetIconPngBytes(resolvedPath) : null;
+        return toolViewModel.IconSourcePath is { } path ? IconExtractionService.GetIconPngBytes(path) : null;
     }
 
     private static async Task<BitmapImage> CreateBitmapImageAsync(byte[] pngBytes)
@@ -443,15 +442,32 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private bool _dialogOpen;
+
     private async Task ShowDialogAsync(string title, string message)
     {
-        var dialog = new ContentDialog
+        // WinUI n'autorise qu'un ContentDialog à la fois : un double-clic rapide lèverait sinon
+        // une exception dans un async void et fermerait l'application.
+        if (_dialogOpen)
         {
-            Title = title,
-            Content = message,
-            CloseButtonText = "OK",
-            XamlRoot = Content.XamlRoot
-        };
-        await dialog.ShowAsync();
+            return;
+        }
+
+        _dialogOpen = true;
+        try
+        {
+            var dialog = new ContentDialog
+            {
+                Title = title,
+                Content = message,
+                CloseButtonText = "OK",
+                XamlRoot = Content.XamlRoot
+            };
+            await dialog.ShowAsync();
+        }
+        finally
+        {
+            _dialogOpen = false;
+        }
     }
 }
